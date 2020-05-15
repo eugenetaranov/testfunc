@@ -1,0 +1,36 @@
+## faas-cli install
+
+#### linux
+curl -sSL https://cli.openfaas.com | sudo -E sh
+
+#### osx
+brew install faas-cli
+
+## Openfaas namespaces
+
+kubectl apply -f https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
+
+## Add chart
+
+helm repo add openfaas https://openfaas.github.io/faas-netes/
+
+## Deploy
+
+helm repo update \
+&& helm upgrade openfaas --install openfaas/openfaas \
+--namespace openfaas  \
+--set functionNamespace=openfaas-fn \
+--set generateBasicAuth=true
+
+## Get password
+export OPENFAAS_PASSWORD=$(kubectl -n openfaas get secret basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode)
+
+## Get URL
+# kubectl get svc -n openfaas gateway-external -o wide
+export OPENFAAS_URL=$(minikube service gateway-external -n openfaas --url)
+
+
+## Login
+echo -n $OPENFAAS_PASSWORD | faas-cli login -g $OPENFAAS_URL -u admin --password-stdin
+
+https://aws.amazon.com/blogs/compute/authenticating-amazon-ecr-repositories-for-docker-cli-with-credential-helper/

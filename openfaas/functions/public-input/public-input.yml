@@ -1,0 +1,14 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: ${OPENFAAS_URL}
+functions:
+  public-input:
+    combine_output: false
+    lang: python3
+    handler: ./public-input
+    image: ${DOCKER_REPO}public-input:latest
+    environment:
+      KAFKA_HOST: kafka.openfaas
+      KAFKA_PORT: 9092
+      KAFKA_TOPIC: test2

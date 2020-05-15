@@ -1,0 +1,16 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: ${OPENFAAS_URL}
+functions:
+  kafka-consumer:
+    annotations:
+      topic: test2
+    lang: python3
+    handler: ./kafka-consumer
+    image: ${DOCKER_REPO}kafka-consumer:latest
+    environment:
+      KAFKA_HOST: kafka.openfaas
+      KAFKA_PORT: 9092
+      KAFKA_TOPIC: test2
+      write_debug: true
