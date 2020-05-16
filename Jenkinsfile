@@ -36,7 +36,6 @@ spec:
     AWS_REGION = "us-east-1"
     DOCKER_REPO = "829968223664.dkr.ecr.us-east-1.amazonaws.com/"
     OPENFAAS_URL = "http://openfaas.testdomain.com"
-    GIT_REPO = "https://github.com/eugenetaranov/testfunc.git"
     DEBIAN_FRONTEND = "noninteractive"
   }
 
