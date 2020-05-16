@@ -17,17 +17,20 @@ spec:
       privileged: true 
     command:
     - cat
-    env:
-    - name: OPENFAAS_USER
-      valueFrom:
-        secretKeyRef:
-          name: openfaas-basic-auth
-          key: basic-auth-user
-    - name: OPENFAAS_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: openfaas-basic-auth
-          key: basic-auth-password
+    volumeMounts:
+    - name: openfaas-basic-auth
+      mountPath: /etc/secrets/openfaas-basic-auth
+      readOnly: true
+    - name: openfaas-endpoint
+      mountPath: /etc/openfaas-endpoint
+      readOnly: true
+  volumes:
+  - name: openfaas-basic-auth
+    secret:
+      secretName: openfaas-basic-auth
+  - name: openfaas-endpoint
+    configMap:
+      name: jenkins-openfaas-endpoint
 """
     }
   }
@@ -35,8 +38,6 @@ spec:
   environment {
     AWS_REGION = "us-east-1"
     DOCKER_REPO = "829968223664.dkr.ecr.us-east-1.amazonaws.com/"
-    OPENFAAS_URL = "http://openfaas.testdomain.com"
-    DEBIAN_FRONTEND = "noninteractive"
   }
 
   stages {
@@ -45,9 +46,10 @@ spec:
         container('build') {
           sh """
             apt update
-            apt install -y docker.io awscli curl amazon-ecr-credential-helper
+            DEBIAN_FRONTEND=noninteractive apt install -y docker.io awscli curl
             curl -sLS cli.openfaas.com | sh
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REPO
+            cat /etc/secrets/openfaas-basic-auth/basic-auth-password | faas-cli login -g `cat /etc/openfaas-endpoint/openfaas_endpoint` -u `cat /etc/secrets/openfaas-basic-auth/basic-auth-user` --password-stdin
             dockerd &
           """
         }
@@ -77,6 +79,7 @@ spec:
           do
               cd functions/\${f}
               faas-cli push -f \${f}.yml
+              faas-cli deploy -f \${f}.yml
               cd \$OLDPWD
           done
           """
